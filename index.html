@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#133936"/>
+  <meta name="description" content="Triple jump across 13 floating islands, bounce on mushrooms, and dodge spinning obstacles. Explore a soft sculpted 3D toy world."/>
+  <title>Jelly Jungle · A Sky-High Adventure</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='28' fill='%23f7a4ca'/%3E%3Cellipse cx='32' cy='48' rx='6' ry='10' fill='%23173536'/%3E%3Cellipse cx='68' cy='48' rx='6' ry='10' fill='%23173536'/%3E%3Cpath d='M40 70 Q50 78 60 70' fill='none' stroke='%23173536' stroke-width='5'/%3E%3C/svg%3E"/>
+  <link rel="stylesheet" href="/src/style.css"/>
+</head>
+<body>
+  <canvas id="world" aria-label="Jelly Jungle 3D game canvas"></canvas>
+  <div class="vignette"></div>
+
+  <!-- Top bar navigation -->
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Jelly Jungle home">
+      <span class="brand-mark"><i></i><i></i></span>
+      <span>jelly<span class="brand-light">jungle</span><small>A LITTLE LEAP. A BIG ADVENTURE.</small></span>
+    </a>
+    <div class="top-actions">
+      <button id="sound" class="icon-btn" aria-label="Turn sound on" title="Toggle sound">
+        <i data-lucide="volume-x"></i>
+      </button>
+      <button id="help" class="icon-btn" aria-label="How to play" title="How to play">
+        <i data-lucide="circle-help"></i>
+      </button>
+      <button id="pause" class="icon-btn" aria-label="Pause game" title="Pause / resume (Esc)">
+        <i data-lucide="pause"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Comparison mode dock -->
+  <div class="mode-dock">
+    <div class="mode-eyebrow">
+      <span class="live-dot"></span>
+      <span id="mode-status">TRIPO 3D WORLD</span>
+      <span class="mode-tip">Click to compare <i data-lucide="corner-right-down"></i></span>
+    </div>
+    <button id="mode-toggle" class="mode-toggle" aria-label="Switch to Classic mode, with all assets created in Three.js" aria-pressed="true">
+      <span class="mode-option active" id="tripo-option">
+        <i data-lucide="sparkles"></i>
+        <span>Tripo AI<small>Rich detail</small></span>
+        <span class="default-tag">DEFAULT</span>
+      </span>
+      <span class="mode-option" id="classic-option">
+        <i data-lucide="box"></i>
+        <span>Classic<small>Pure Three.js</small></span>
+      </span>
+      <span class="mode-knob"></span>
+    </button>
+    <div class="mode-footnote" id="mode-footnote">Same course. Same rules. A different 3D world.</div>
+  </div>
+
+  <main>
+    <!-- Opening Intro Hero -->
+    <section class="intro" id="intro">
+      <div class="eyebrow"><span></span>WELCOME TO YOUR SKY PLAYGROUND</div>
+      <h1>JELLY<br/><span>JUNGLE<span class="title-star">✳</span></span><em>Born to bounce.</em></h1>
+      <p class="intro-copy">A little jelly with a big case of wanderlust.<br/>Bounce on mushrooms. Dodge trouble. Chase the clouds.</p>
+      <div class="feature-tags">
+        <span><i data-lucide="chevrons-up"></i>Triple jumps</span>
+        <span><i data-lucide="rotate-3d"></i>Wild obstacles</span>
+        <span><i data-lucide="gem"></i>Crystal hunt</span>
+      </div>
+      <button class="play-button" id="start">
+        <span>Let’s bounce</span>
+        <i data-lucide="arrow-up-right"></i>
+      </button>
+      <div class="play-hint"><span class="keycap">SPACE</span> Jump · press again for two extra jumps</div>
+      <div class="intro-bottom">
+        <div class="tiny-world"><i data-lucide="orbit"></i></div>
+        <div>
+          <strong>13 islands. A whole sky to explore.</strong>
+          <span>Free to play · No sign-up · Every fall is a fresh start</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compact In-game HUD -->
+    <section class="hud hidden" id="hud" aria-label="Game status">
+      <div class="hud-main">
+        <span class="hud-title">Cloud Run<small id="stage-sub">JELLY JUNGLE</small></span>
+        <span class="hud-divider"></span>
+        <span class="stat">
+          <i data-lucide="gem"></i>
+          <strong id="gem-count">0</strong>
+          <small id="gem-total">/ 39</small>
+        </span>
+        <span class="hud-divider"></span>
+        <span class="stat clock-stat">
+          <i data-lucide="timer"></i>
+          <strong id="timer">00:00</strong>
+        </span>
+      </div>
+      <div class="route-progress">
+        <div>
+          <span id="stage-name">01 / First Leap</span>
+          <span id="progress-percent">0%</span>
+        </div>
+        <div class="progress-track">
+          <i id="progress-fill" style="width: 0%;"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Floating World Label -->
+    <div class="world-label" id="world-label">
+      <span>✦</span>
+      <div>Next stop: above the clouds<small>THE SKY IS YOUR PLAYGROUND</small></div>
+    </div>
+
+    <!-- Nonblocking Toast Message -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Three-dot Jump Meter -->
+    <div class="jump-meter hidden" id="jump-meter">
+      <div id="jump-dots">
+        <b></b><b></b><b></b>
+      </div>
+      <span id="jump-label">3 jumps ready</span>
+    </div>
+
+    <!-- Checkpoint Notification -->
+    <div class="checkpoint-notice hidden" id="checkpoint-notice">
+      <i data-lucide="flag"></i>
+      <div>Checkpoint saved<small>Take the leap. You can come back here.</small></div>
+    </div>
+  </main>
+
+  <!-- Bottom Footer -->
+  <footer class="bottom-bar">
+    <div class="asset-credit">
+      <span class="tripo-symbol">✳</span>
+      <span id="asset-credit">3D assets generated with <strong>Tripo</strong></span>
+      <span class="credit-line"></span>
+      <a href="https://studio.tripo3d.ai/workspace/generate?view=image_to_model&amp;auto-send=true&amp;tab=smart_mesh&amp;utm_source=3d-prompts&amp;utm_medium=jelly-jungle-3d-browser-game-2081024333120733188" target="_blank" rel="noopener noreferrer">
+        Create your character <i data-lucide="arrow-up-right"></i>
+      </a>
+    </div>
+    <div class="control-hints">
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</span>
+      <span><kbd>SPACE</kbd> Triple jump</span>
+      <span><kbd>R</kbd> Respawn</span>
+    </div>
+    <span class="edition">A SOFT LITTLE ESCAPE ↗</span>
+  </footer>
+
+  <!-- Touch Joystick & Button (Mobile) -->
+  <div class="mobile-controls hidden" id="mobile-controls">
+    <div id="joystick">
+      <div id="stick"></div>
+    </div>
+    <button id="touch-jump" aria-label="Jump">
+      <i data-lucide="chevrons-up"></i>
+      <span>Jump</span>
+    </button>
+  </div>
+
+  <!-- Help Modal Dialog -->
+  <dialog id="help-dialog" class="modal">
+    <button class="modal-close" aria-label="Close instructions">×</button>
+    <span class="modal-eyebrow">HOW TO PLAY</span>
+    <h2>Take the leap.<br/>Find your feet in the clouds.</h2>
+    <div class="help-grid">
+      <div>
+        <span>01</span>
+        <strong>Find your footing</strong>
+        <p>Move with WASD or the arrow keys. On mobile, use the left virtual joystick.</p>
+      </div>
+      <div>
+        <span>02</span>
+        <strong>Two more jumps in midair</strong>
+        <p>Press Space to jump, then release and press again. Space out your jumps to travel farther.</p>
+      </div>
+      <div>
+        <span>03</span>
+        <strong>Catch a mushroom boost</strong>
+        <p>Land on a pink mushroom to launch upward and refill all three air jumps.</p>
+      </div>
+      <div>
+        <span>04</span>
+        <strong>Watch the obstacles</strong>
+        <p>Jump over spinning bars. Moving islands carry you along. Orange platforms briefly crumble away.</p>
+      </div>
+    </div>
+    <p class="help-note">Collect crystals and race to the finish. Flags save your checkpoint. Press R to respawn or Esc to pause. Switching art modes keeps your progress.</p>
+    <button class="secondary-button modal-close">Got it. Let’s go!</button>
+  </dialog>
+
+  <!-- Pause Modal Dialog -->
+  <dialog id="pause-dialog" class="modal pause-modal">
+    <span class="modal-eyebrow">TAKE A LITTLE BREATH</span>
+    <h2>Even little jellies<br/>need a breather.</h2>
+    <button id="resume" class="play-button">
+      <span>Keep bouncing</span>
+      <i data-lucide="play"></i>
+    </button>
+    <button id="restart" class="secondary-button">Start a new run</button>
+  </dialog>
+
+  <!-- Victory / Win Modal Dialog -->
+  <dialog id="win-dialog" class="modal win-modal">
+    <span class="modal-eyebrow">A LEAP WELL TAKEN ✦</span>
+    <div id="win-stars" class="win-stars">✦ ✦ ✦</div>
+    <h2>Little jelly.<br/>Big sky energy.</h2>
+    <p id="win-summary"></p>
+    <div class="win-stats">
+      <div>
+        <strong id="final-time">00:00</strong>
+        <span>Run time</span>
+      </div>
+      <div>
+        <strong id="final-gems">0 / 39</strong>
+        <span>Crystals</span>
+      </div>
+      <div>
+        <strong id="final-falls">0</strong>
+        <span>Falls</span>
+      </div>
+    </div>
+    <button id="replay" class="play-button">
+      <span>Go again. Beat your best.</span>
+      <i data-lucide="rotate-ccw"></i>
+    </button>
+    <a class="create-link" href="https://studio.tripo3d.ai/workspace/generate?view=image_to_model&amp;auto-send=true&amp;tab=smart_mesh&amp;utm_source=3d-prompts&amp;utm_medium=jelly-jungle-3d-browser-game-2081024333120733188" target="_blank" rel="noopener noreferrer">
+      Next run, bring a character you created <i data-lucide="arrow-up-right"></i>
+    </a>
+    <label class="import-model">
+      Have a character? Add it and play
+      <input id="model-upload" type="file" accept=".glb"/>
+    </label>
+    <small class="import-note">GLB files up to 20 MB. Loaded locally on your device.</small>
+  </dialog>
+
+  <!-- Initial Loading Indicator -->
+  <div class="loading-badge" id="loading">
+    <span></span>
+    <span id="loading-label">Waking up the jungle…</span>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
